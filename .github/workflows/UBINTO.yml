@@ -24,18 +24,25 @@ jobs:
           startxfce4 &" > ~/.vnc/xstartup
           chmod +x ~/.vnc/xstartup
 
-      - name: Start VNC, noVNC, and Tunnel
+      - name: Start VNC
         run: |
           vncserver :1 -geometry 1280x720 -depth 24
 
+      - name: Start noVNC
+        run: |
           git clone https://github.com/novnc/noVNC.git
           git clone https://github.com/novnc/websockify noVNC/utils/websockify
 
           cd noVNC
-          python3 utils/websockify/websockify.py --web . 6080 localhost:5901 &
-          cd ..
+          nohup python3 utils/websockify/websockify.py --web . 6080 localhost:5901 > ../novnc.log 2>&1 &
 
+      - name: Check if noVNC is running
+        run: |
+          sleep 5
+          netstat -tuln | grep 6080 || { echo "noVNC failed to start"; cat novnc.log; exit 1; }
+
+      - name: Start Cloudflared Tunnel
+        run: |
           wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
           chmod +x cloudflared
-
           ./cloudflared tunnel --url http://localhost:6080
