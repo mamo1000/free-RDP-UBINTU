@@ -33,13 +33,13 @@ jobs:
           vncserver :1 -geometry 1280x720 -depth 24
           
           # تحميل noVNC و websockify
-          git clone https://github.com/novnc/noVNC.git ~/noVNC
-          git clone https://github.com/novnc/websockify ~/noVNC/utils/websockify
+          git clone https://github.com/novnc/noVNC.git $HOME/noVNC
+          git clone https://github.com/novnc/websockify $HOME/noVNC/utils/websockify
           
           # تشغيل noVNC في الخلفية
-          ~/noVNC/utils/launch.sh --vnc localhost:5901 --listen 6080 &
+          $HOME/noVNC/utils/launch.sh --vnc localhost:5901 --listen 6080 &
           
-          # تشغيل النفق كآخر أمر ليبقي الـ job شغالًا
+          # تشغيل النفق باستخدام بديل أكثر استقرارًا (localhost.run)
           # سيقوم بطباعة الرابط العام في سجل الأوامر (Logs)
-          echo "--> Your VNC is accessible through a browser at the URL provided by serveo.net"
-          ssh -o StrictHostKeyChecking=no -R 80:localhost:6080 serveo.net
+          echo "--> Your VNC is accessible through a browser at the URL provided by localhost.run"
+          ssh -o StrictHostKeyChecking=no -R 80:localhost:6080 localhost.run
