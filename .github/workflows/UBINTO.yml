@@ -9,19 +9,16 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install xfce4 xfce4-goodies tightvncserver git wget -y
+          sudo apt install xfce4 xfce4-goodies tightvncserver git wget python3 -y
 
       - name: Configure VNC
-        # نستخدم GitHub Secret عشان الأمان
         env:
           VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
         run: |
-          # إنشاء مجلد VNC وتعيين الباسورد بشكل غير تفاعلي
           mkdir -p ~/.vnc
           echo "$VNC_PASSWORD" | vncpasswd -f > ~/.vnc/passwd
           chmod 600 ~/.vnc/passwd
 
-          # إنشاء ملف بدء التشغيل
           echo "#!/bin/bash
           xrdb \$HOME/.Xresources
           startxfce4 &" > ~/.vnc/xstartup
@@ -29,22 +26,16 @@ jobs:
 
       - name: Start VNC, noVNC, and Tunnel
         run: |
-          # تشغيل سيرفر VNC في الخلفية
           vncserver :1 -geometry 1280x720 -depth 24
-          
-          # تحميل noVNC و websockify في المجلد الحالي
+
           git clone https://github.com/novnc/noVNC.git
           git clone https://github.com/novnc/websockify noVNC/utils/websockify
-          
-          # تشغيل noVNC في الخلفية (مع إعطاء صلاحيات التشغيل لضمان العمل)
-          chmod +x ./noVNC/utils/launch.sh
-          ./noVNC/utils/launch.sh --vnc localhost:5901 --listen 6080 &
-          
-          # تحميل وتشغيل Cloudflared Tunnel كبديل نهائي ومستقر
-          echo "--> Downloading Cloudflared Tunnel..."
+
+          cd noVNC
+          python3 utils/websockify/websockify.py --web . 6080 localhost:5901 &
+          cd ..
+
           wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
           chmod +x cloudflared
-          
-          echo "--> Starting Cloudflared Tunnel. Your VNC will be accessible at the URL ending with .trycloudflare.com"
-          # تشغيل النفق كآخر أمر ليبقي الـ job شغالًا
+
           ./cloudflared tunnel --url http://localhost:6080
