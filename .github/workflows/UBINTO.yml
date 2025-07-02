@@ -30,11 +30,12 @@ jobs:
 
       - name: Start noVNC
         run: |
-          git clone https://github.com/novnc/noVNC.git
-          git clone https://github.com/novnc/websockify noVNC/utils/websockify
+          git clone --branch v1.2.0 https://github.com/novnc/noVNC.git
+          git clone --branch v0.10.0 https://github.com/novnc/websockify noVNC/utils/websockify
 
           cd noVNC
-          nohup python3 utils/websockify/websockify.py --web . 6080 localhost:5901 > ../novnc.log 2>&1 &
+          chmod +x utils/launch.sh
+          nohup ./utils/launch.sh --vnc localhost:5901 --listen 6080 > ../novnc.log 2>&1 &
 
       - name: Check if noVNC is running
         run: |
